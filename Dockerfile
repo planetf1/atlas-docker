@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Copyright Contributors to the Egeria project
 
-FROM maven:3.8.3-openjdk-8 AS build
+FROM maven:3.8.3-openjdk-17 AS build
 
 # Overrideable parks
 ARG DOWNLOAD_SERVER="https://archive.apache.org/dist"
