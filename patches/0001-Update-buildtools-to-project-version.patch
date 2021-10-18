@@ -1,0 +1,25 @@
+From 3f019e653d64a1f108defe9972b7382b797dee24 Mon Sep 17 00:00:00 2001
+From: Nigel Jones <nigel.l.jones+git@gmail.com>
+Date: Mon, 18 Oct 2021 09:42:49 +0100
+Subject: [PATCH] Update buildtools to project version
+
+Signed-off-by: Nigel Jones <nigel.l.jones+git@gmail.com>
+---
+ pom.xml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/pom.xml b/pom.xml
+index db429d320..b0ac23c86 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -2161,7 +2161,7 @@
+                     <dependency>
+                         <groupId>org.apache.atlas</groupId>
+                         <artifactId>atlas-buildtools</artifactId>
+-                        <version>1.0</version>
++                        <version>${project.version}</version>
+                     </dependency>
+                 </dependencies>
+                 <executions>
+--
+2.33.1

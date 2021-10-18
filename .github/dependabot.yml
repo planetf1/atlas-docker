@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0
+# Copyright Contributors to the ODPi Egeria project.
+version: 2
+updates:
+- package-ecosystem: gradle
+  directory: "/"
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 100
+  reviewers:
+  - planetf1
+- package-ecosystem: maven
+  directory: "/"
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 100
+  reviewers:
+  - planetf1
+- package-ecosystem: docker
+  directory: "/open-metadata-resources/open-metadata-deployment/docker/egeria"
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 5
+  reviewers:
+  - planetf1
+- package-ecosystem: docker
+  directory: "/open-metadata-resources/open-metadata-deployment/docker/configure"
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 5
+  reviewers:
+  - cmgrote
+  - planetf1
+- package-ecosystem: docker
+  directory: "./open-metadata-resources/open-metadata-deployment/docker/jupyter"
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 5
+  reviewers:
+  - planetf1
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: monthly
+  open-pull-requests-limit: 10
+  reviewers:
+  - planetf1
