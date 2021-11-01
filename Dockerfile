@@ -41,7 +41,7 @@ RUN mvn clean -DskipCheck=true -DskipTests=true install && \
     mkdir -p /opt/atlas-bin && \
     tar zxf /opt/apache-atlas-sources-$ATLAS_VERSION/distro/target/*server.tar.gz --strip-components 1 -C /opt/atlas-bin
 
-FROM openjdk:8-jdk-alpine
+FROM openjdk:16-jdk-alpine
 
 LABEL org.label-schema.schema-version = "1.0"
 LABEL org.label-schema.vendor = "ODPi"
