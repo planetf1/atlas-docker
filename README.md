@@ -1,7 +1,9 @@
 <!-- SPDX-License-Identifier: CC-BY-4.0 -->
 <!-- Copyright Contributors to the Egeria project. -->
 # atlas-docker
-Apache Atlas Dockerfile to support ongoing Egeria development work
+Apache Atlas Dockerfile to support ongoing Egeria development work. It is not suitable as a general Atlas container as it needs to be much more configurable to integrate into the broader environment.
+
+We may evolve this over time, and make use of it in a helm chart to deploy a more appropriate ecosystem to support development and testing of the Egeria Atlas connector
 
 * Based on Apache Atlas 2.2.0
 * Docker images based on those previously in https://github.com/odpi/egeria
@@ -9,7 +11,6 @@ Apache Atlas Dockerfile to support ongoing Egeria development work
 # Running the image
 
 Currently this image is only tested running on linux/macos podman.
-In future the image could be used within a k8s container etc
 
 ## Launch
 
