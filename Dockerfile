@@ -1,58 +1,64 @@
-# SPDX-License-Identifier: Apache-2.0
-# Copyright Contributors to the Egeria project
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-# --- BUILD time ---
+FROM ubuntu:22.04 as build
 
-#FROM maven:3.8.3-openjdk-8 AS build
-FROM docker.io/eclipse-temurin:8-jdk AS build
+# Install additional tools
+RUN apt-get update && apt-get install -y git python3 openjdk-8-jdk maven build-essential python-is-python3
 
-# Overrideable parks
-ARG DOWNLOAD_SERVER="https://archive.apache.org/dist"
-ARG ATLAS_VERSION=2.2.0
+# Setup environment for Java/Maven
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+ENV MAVEN_HOME /usr/share/maven
 
-# Override as needed, for example quay.io
-ARG REGISTRY=registry-1.docker.io
+# Add Java and Maven to the path.
+ENV PATH /usr/java/bin:/usr/local/apache-maven/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# Override this with the repo you wish to use (this is authors)
-ARG REPO=planetf1
+# Working directory
+WORKDIR /root
 
+# Pull down Atlas and build it into /root/atlas-bin.
+RUN git clone https://github.com/apache/atlas.git -b master
 
-ENV ATLAS_URL="${DOWNLOAD_SERVER}/atlas/${ATLAS_VERSION}/apache-atlas-${ATLAS_VERSION}-sources.tar.gz" \
-    ATLAS_KEYS="${DOWNLOAD_SERVER}/atlas/KEYS" \
-    JAVA_TOOL_OPTIONS="-Xmx2048m" \
-    MAVEN_OPTS="-Xms2g -Xmx2g"
+RUN echo 'package-lock=false' >> ./atlas/.npmrc
 
-WORKDIR /opt
+RUN echo 'package-lock.json' >> ./atlas/.gitignore
 
-# Some base additions
-RUN apt-get update && apt-get install -y patch wget gpg maven
+# Memory requirements
+ENV MAVEN_OPTS "-Xms2g -Xmx2g"
+# RUN export MAVEN_OPTS="-Xms2g -Xmx2g"
 
-# Pull down Apache Atlas and build it into /root/atlas-bin.
-RUN set -e; \
-  wget -nv "$ATLAS_URL" -O "apache-atlas-$ATLAS_VERSION.tar.gz" && \
-  wget -nv "$ATLAS_URL.asc" -O "apache-atlas-$ATLAS_VERSION.tar.gz.asc" && \
-  wget -nv "$ATLAS_KEYS" -O "atlas-KEYS" && \
+# -- Full build -- could be cut down if needed
 
-  # Key verifications causes issues with 'podman'
-  #gpg --import atlas-KEYS && \
-  #gpg --verify apache-atlas-$ATLAS_VERSION.tar.gz.asc apache-atlas-$ATLAS_VERSION.tar.gz && \
-  tar zxf apache-atlas-$ATLAS_VERSION.tar.gz
-
-WORKDIR /opt/apache-atlas-sources-$ATLAS_VERSION
-
-# A few patches for the build
-COPY patches/0001-Update-buildtools-to-project-version.patch .
-RUN patch < 0001-Update-buildtools-to-project-version.patch
-
-# Increase resource limits for build
 # Remove -DskipTests if unit tests are to be included
-RUN mvn clean -DskipCheck=true -DskipTests=true install -DskipITs=true -Drat.skip=true -Pdist,embedded-hbase-solr && \
-    mkdir -p /opt/atlas-bin && \
-    tar zxf /opt/apache-atlas-sources-$ATLAS_VERSION/distro/target/*server.tar.gz --strip-components 1 -C /opt/atlas-bin
+RUN mvn clean install -Dmaven.wagon.http.ssl.ignore.validity.dates=true -Dmaven.wagon.http.ssl.insecure=true -Drat.skip=true -Dcheckstyle.skip=true -Dfindbugs.skip=true -DskipTests -Pdist,embedded-hbase-solr -f ./atlas/pom.xml
+RUN mkdir -p atlas-bin
+RUN tar xzf /root/atlas/distro/target/*bin.tar.gz --strip-components 1 -C /root/atlas-bin
+
+# Set env variables, add it to the path, and start Atlas.
+#ENV MANAGE_LOCAL_SOLR true
+#ENV MANAGE_LOCAL_HBASE true
+#ENV PATH /root/atlas-bin/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+#EXPOSE 21000 21443
+
+#CMD ["/bin/bash", "-c", "/root/atlas-bin/bin/atlas_start.py; tail -fF /root/atlas-bin/logs/application.log"]
 
 # --- RUN time ---
 
-#TODO: Light weight runtime needed
+#TODO: Light weight runtime needed - but needs to be JDK as atlas uses jar
 FROM docker.io/eclipse-temurin:8-jdk
 
 LABEL org.label-schema.schema-version = "1.0"
@@ -68,13 +74,12 @@ ENV JAVA_TOOL_OPTIONS="-Xmx2048m" \
     HBASE_CONF_DIR="/opt/apache/atlas/hbase/conf" \
     ATLAS_OPTS="-Dkafka.advertised.hostname=localhost"
 
-RUN apk --no-cache add python bash shadow && \
-    apk --no-cache update && \
-    apk --no-cache upgrade && \
+RUN apt-get update && apt-get install -y python3 python-is-python3 bash && \
+    apt-get -y  dist-upgrade && \
     groupadd -r atlas -g 21000 && \
     useradd --no-log-init -r -g atlas -u 21000 -d /opt/apache/atlas atlas
 
-COPY --from=build --chown=atlas:atlas /opt/atlas-bin/ /opt/apache/atlas/
+COPY --from=build --chown=atlas:atlas /root/atlas-bin/ /opt/apache/atlas/
 
 # Must use numeric userid here to meet k8s security checks
 USER 21000:21000
@@ -86,4 +91,6 @@ RUN sed -i "s|^atlas.graph.storage.lock.wait-time=10000|atlas.graph.storage.lock
     echo "atlas.kafka.advertised.listeners=PLAINTEXT://\${sys:kafka.advertised.hostname}:9027" >> conf/atlas-application.properties
 
 EXPOSE 9026 9027 21000
+
+ENV JAVA_HOME="/opt/java/openjdk"
 ENTRYPOINT ["/bin/bash", "-c", "/opt/apache/atlas/bin/atlas_start.py; tail -fF /opt/apache/atlas/logs/atlas*.out"]
