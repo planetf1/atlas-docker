@@ -59,7 +59,7 @@ RUN tar xzf /root/atlas/distro/target/*bin.tar.gz --strip-components 1 -C /root/
 # --- RUN time ---
 
 #TODO: Light weight runtime needed - but needs to be JDK as atlas uses jar
-FROM docker.io/eclipse-temurin:8-jdk
+FROM docker.io/eclipse-temurin:19-jdk
 
 LABEL org.label-schema.schema-version = "1.0"
 LABEL org.label-schema.vendor = "LF AI & Data"

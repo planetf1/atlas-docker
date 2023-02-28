@@ -4,7 +4,7 @@
 # --- BUILD time ---
 
 #FROM maven:3.8.3-openjdk-8 AS build
-FROM docker.io/eclipse-temurin:8-jdk AS build
+FROM docker.io/eclipse-temurin:19-jdk AS build
 
 # Overrideable parks
 ARG DOWNLOAD_SERVER="https://archive.apache.org/dist"
@@ -53,7 +53,7 @@ RUN mvn clean -DskipCheck=true -DskipTests=true install -DskipITs=true -Drat.ski
 # --- RUN time ---
 
 #TODO: Light weight runtime needed
-FROM docker.io/eclipse-temurin:8-jdk
+FROM docker.io/eclipse-temurin:19-jdk
 
 LABEL org.label-schema.schema-version = "1.0"
 LABEL org.label-schema.vendor = "LF AI & Data"
