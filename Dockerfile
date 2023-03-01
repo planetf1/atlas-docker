@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:22.04 as build
+FROM ubuntu:23.04 as build
 
 # Install additional tools
 RUN apt-get update && apt-get install -y git python3 openjdk-8-jdk maven build-essential python-is-python3
